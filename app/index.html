@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A quick overview of project status, ownership, activity, and priority.">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="dashboard-header">
+        <div>
+          <h1 class="dashboard-heading">Project Pulse</h1>
+          <p class="dashboard-intro">A quick snapshot of what teams are building, who owns it, and where each project stands.</p>
+        </div>
+        <p class="dashboard-summary" id="project-count" aria-live="polite">Loading projects…</p>
+      </header>
+
+      <p class="dashboard-loading" id="loading-state" role="status">Loading project data…</p>
+      <p class="dashboard-error" id="error-state" role="alert" hidden></p>
+      <p class="dashboard-empty" id="empty-state" role="status" hidden>No projects are available yet.</p>
+      <section class="dashboard-grid" id="project-grid" aria-label="Projects" hidden></section>
+    </main>
+
+    <script>
+      const projectGrid = document.querySelector("#project-grid");
+      const projectCount = document.querySelector("#project-count");
+      const loadingState = document.querySelector("#loading-state");
+      const errorState = document.querySelector("#error-state");
+      const emptyState = document.querySelector("#empty-state");
+
+      const statusClasses = {
+        "on track": "status-badge--on-track",
+        "at risk": "status-badge--at-risk",
+        blocked: "status-badge--blocked",
+        planned: "status-badge--planned"
+      };
+      const priorityClasses = {
+        high: "priority--high",
+        medium: "priority--medium",
+        low: "priority--low"
+      };
+
+      function displayValue(value) {
+        return typeof value === "string" || typeof value === "number"
+          ? String(value).trim()
+          : "";
+      }
+
+      function createDetail(label, value, className) {
+        const detail = document.createElement("div");
+        detail.className = "project-detail";
+
+        const detailLabel = document.createElement("dt");
+        detailLabel.className = "project-detail-label";
+        detailLabel.textContent = label;
+
+        const detailValue = document.createElement("dd");
+        detailValue.className = `project-detail-value${className ? ` ${className}` : ""}`;
+        detailValue.textContent = value;
+
+        detail.append(detailLabel, detailValue);
+        return detail;
+      }
+
+      function createProjectCard(project) {
+        const card = document.createElement("article");
+        card.className = "project-card";
+
+        const header = document.createElement("header");
+        header.className = "project-card-header";
+
+        const headingGroup = document.createElement("div");
+        const title = document.createElement("h2");
+        title.className = "project-card-title";
+        title.textContent = displayValue(project.name) || "Untitled project";
+
+        const owner = document.createElement("p");
+        owner.className = "project-owner";
+        owner.textContent = `Owner: ${displayValue(project.owner) || "Unassigned"}`;
+        headingGroup.append(title, owner);
+
+        const statusText = displayValue(project.status) || "Unknown";
+        const status = document.createElement("span");
+        status.className = "status-badge";
+        const statusClass = statusClasses[statusText.toLowerCase()];
+        if (statusClass) status.classList.add(statusClass);
+        status.textContent = statusText;
+        status.setAttribute("aria-label", `Status: ${statusText}`);
+        header.append(headingGroup, status);
+        card.append(header);
+
+        const summaryText = displayValue(project.summary);
+        if (summaryText) {
+          const summary = document.createElement("p");
+          summary.className = "project-summary";
+          summary.textContent = summaryText;
+          card.append(summary);
+        }
+
+        const details = document.createElement("dl");
+        details.className = "project-card-details";
+        const priorityText = displayValue(project.priority) || "Unspecified";
+        const priority = document.createElement("span");
+        priority.className = "priority";
+        const priorityClass = priorityClasses[priorityText.toLowerCase()];
+        if (priorityClass) priority.classList.add(priorityClass);
+        priority.textContent = priorityText;
+
+        details.append(
+          createDetail("Priority", priorityText, priority.className),
+          createDetail("Recent activity", displayValue(project.recentActivity) || "No recent activity provided.")
+        );
+        card.append(details);
+        return card;
+      }
+
+      function showError(message) {
+        loadingState.hidden = true;
+        projectGrid.hidden = true;
+        projectCount.textContent = "Projects unavailable";
+        errorState.textContent = message;
+        errorState.hidden = false;
+      }
+
+      async function loadProjects() {
+        try {
+          const response = await fetch("./project-data.json");
+          if (!response.ok) {
+            throw new Error(`The project data request failed (${response.status}).`);
+          }
+
+          const data = await response.json();
+          if (!data || !Array.isArray(data.projects)) {
+            throw new Error("The project data must contain a top-level projects array.");
+          }
+
+          loadingState.hidden = true;
+          if (data.projects.length === 0) {
+            projectCount.textContent = "0 projects";
+            emptyState.hidden = false;
+            return;
+          }
+
+          const cards = data.projects.map(createProjectCard);
+          projectGrid.replaceChildren(...cards);
+          projectCount.textContent = `${cards.length} ${cards.length === 1 ? "project" : "projects"}`;
+          projectGrid.hidden = false;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+          showError(`We couldn’t load the projects. ${message} Please try again after checking the data file and local server.`);
+        }
+      }
+
+      loadProjects();
+    </script>
+  </body>
+</html>

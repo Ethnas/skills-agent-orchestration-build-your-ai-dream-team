@@ -1,0 +1,36 @@
+{
+  "projects": [
+    {
+      "name": "Atlas Website Refresh",
+      "owner": "Mona Patel",
+      "status": "On track",
+      "recentActivity": "Homepage prototype approved; content review starts next.",
+      "priority": "High",
+      "summary": "Refresh the public website to make product information easier to find and maintain."
+    },
+    {
+      "name": "Customer Insights",
+      "owner": "Jordan Lee",
+      "status": "At risk",
+      "recentActivity": "Data access approval is still pending.",
+      "priority": "High",
+      "summary": "Bring customer feedback and usage signals together in one practical reporting view."
+    },
+    {
+      "name": "Mobile Onboarding",
+      "owner": "Sam Rivera",
+      "status": "Blocked",
+      "recentActivity": "Waiting on the identity team’s updated sign-in flow.",
+      "priority": "Medium",
+      "summary": "Simplify the first-run experience so new users can reach a useful starting point sooner."
+    },
+    {
+      "name": "Design System Foundations",
+      "owner": "Avery Chen",
+      "status": "Planned",
+      "recentActivity": "Kickoff scheduled for next Monday.",
+      "priority": "Low",
+      "summary": "Document shared interface patterns and establish reusable component foundations."
+    }
+  ]
+}
